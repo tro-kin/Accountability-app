@@ -1,0 +1,52 @@
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+
+st.set_page_config(page_title="Personal Accountability", layout="centered")
+
+st.title("🛡️ Anti-BS Accountability")
+st.write("No subscriptions. No corporate fluff. Just the truth.")
+
+# Simple local data storage
+if 'logs' not in st.session_state:
+    st.session_state.logs = []
+
+# Sidebar for Setup
+with st.sidebar:
+    st.header("Partner Info")
+    partner_email = st.text_input("Partner Email", placeholder="where to send reports")
+    
+# Daily Entry Form
+with st.form("entry_form"):
+    st.subheader("Today's Commitment")
+    task = st.text_input("What did you say you would do?")
+    status = st.radio("Did you actually do it?", ["Pending", "Completed", "Failed"])
+    proof = st.text_input("Proof Link (e.g., Image URL, Doc, or specific detail)", placeholder="Evidence required...")
+    
+    submitted = st.form_submit_button("Log Status")
+    
+    if submitted:
+        entry = {
+            "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "Task": task,
+            "Status": status,
+            "Proof": proof
+        }
+        st.session_state.logs.append(entry)
+        st.success("Entry logged. No hiding now.")
+
+# History & Export
+if st.session_state.logs:
+    st.divider()
+    st.subheader("Accountability Log")
+    df = pd.DataFrame(st.session_state.logs)
+    st.table(df)
+    
+    # Export for partner
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Report for Partner",
+        data=csv,
+        file_name=f"accountability_{datetime.now().strftime('%Y%m%d')}.csv",
+        mime='text/csv',
+    )
